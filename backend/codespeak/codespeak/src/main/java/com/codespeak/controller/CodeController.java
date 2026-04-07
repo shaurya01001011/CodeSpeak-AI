@@ -5,8 +5,10 @@ import java.io.*;
 
 @RestController
 @CrossOrigin
+@RequestMapping("/")
 public class CodeController {
 
+    // ✅ HOME
     @GetMapping("/")
     public String home() {
         return "CodeSpeak Backend is Running 🚀";
@@ -70,24 +72,24 @@ public class CodeController {
         }
     }
 
-    // 🔊 EXPLAIN CODE
+    // 📖 EXPLAIN CODE
     @PostMapping("/explain")
     public String explainCode(@RequestBody String code) {
 
-        if (code.contains("even")) {
-            return "This program prints even numbers using a loop. It checks each number and prints it if it is divisible by 2.";
-        }
-
-        else if (code.contains("factorial")) {
-            return "This program calculates factorial using recursion. It multiplies the number with factorial of previous numbers until it reaches zero.";
+        if (code.contains("factorial")) {
+            return "This program calculates factorial using recursion. It multiplies a number with factorial of previous numbers until it reaches 0.";
         }
 
         else if (code.contains("fibonacci")) {
-            return "This program generates Fibonacci numbers where each number is the sum of the previous two numbers.";
+            return "This program generates Fibonacci sequence where each number is the sum of previous two numbers.";
+        }
+
+        else if (code.contains("even")) {
+            return "This program prints even numbers by checking if a number is divisible by 2.";
         }
 
         else {
-            return "This is a Java program with a main function where execution starts.";
+            return "This is a Java program with a main method which is the starting point of execution.";
         }
     }
 
@@ -131,6 +133,58 @@ public class CodeController {
 
         } catch (Exception e) {
             return "Error: " + e.getMessage();
+        }
+    }
+
+    // 📚 LEARNING MODULE (DETAILED)
+    @PostMapping("/learn")
+    public String learnConcept(@RequestBody String topic) {
+
+        topic = topic.toLowerCase();
+
+        if (topic.contains("inheritance")) {
+            return "📘 INHERITANCE IN JAVA\n\n" +
+                    "Definition:\nInheritance allows one class to acquire properties of another class.\n\n" +
+                    "Real-life Example:\nA child inherits traits from parents.\n\n" +
+                    "Example Code:\n" +
+                    "class Animal {\n" +
+                    "    void sound() {\n" +
+                    "        System.out.println(\"Animal makes sound\");\n" +
+                    "    }\n" +
+                    "}\n\n" +
+                    "class Dog extends Animal {\n" +
+                    "    void bark() {\n" +
+                    "        System.out.println(\"Dog barks\");\n" +
+                    "    }\n" +
+                    "}\n\n" +
+                    "Explanation:\nDog inherits methods from Animal.\n";
+        }
+
+        else if (topic.contains("polymorphism")) {
+            return "📘 POLYMORPHISM\n\n" +
+                    "Definition:\nOne method behaves differently.\n\n" +
+                    "Example:\nSame method produces different outputs.\n";
+        }
+
+        else if (topic.contains("encapsulation")) {
+            return "📘 ENCAPSULATION\n\n" +
+                    "Definition:\nWrapping data and methods together.\n\n" +
+                    "Key Point:\nData is protected using private variables.\n";
+        }
+
+        else if (topic.contains("abstraction")) {
+            return "📘 ABSTRACTION\n\n" +
+                    "Definition:\nHiding internal details and showing only functionality.\n";
+        }
+
+        else if (topic.contains("recursion")) {
+            return "📘 RECURSION\n\n" +
+                    "Definition:\nFunction calling itself.\n\n" +
+                    "Example:\nfactorial(n) calls factorial(n-1)\n";
+        }
+
+        else {
+            return "❌ Concept not found. Try: inheritance, polymorphism, abstraction, recursion.";
         }
     }
 }

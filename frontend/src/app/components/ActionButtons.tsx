@@ -1,4 +1,4 @@
-import { Sparkles, Play, BookOpen, Volume2 } from 'lucide-react';
+import { Sparkles, Play, BookOpen, Volume2, GraduationCap } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface ActionButtonsProps {
@@ -6,26 +6,42 @@ interface ActionButtonsProps {
   onRun: () => void;
   onExplain: () => void;
   onReadAloud: () => void;
+  onLearn: () => void;   // 🔥 NEW
   disabled?: boolean;
 }
 
-export function ActionButtons({ onGenerate, onRun, onExplain, onReadAloud, disabled }: ActionButtonsProps) {
+export function ActionButtons({
+  onGenerate,
+  onRun,
+  onExplain,
+  onReadAloud,
+  onLearn,   // 🔥 NEW
+  disabled
+}: ActionButtonsProps) {
+
   const buttons = [
     { label: 'Generate Code', icon: Sparkles, onClick: onGenerate, color: 'purple' },
     { label: 'Run Code', icon: Play, onClick: onRun, color: 'green' },
     { label: 'Explain Code', icon: BookOpen, onClick: onExplain, color: 'blue' },
     { label: 'Read Aloud', icon: Volume2, onClick: onReadAloud, color: 'pink' },
+
+    // 🔥 NEW BUTTON
+    { label: 'Learn Concept', icon: GraduationCap, onClick: onLearn, color: 'yellow' },
   ];
 
   return (
     <div className="grid grid-cols-2 gap-4">
       {buttons.map((button) => {
         const Icon = button.icon;
+
         const colorClasses = {
           purple: 'bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 shadow-purple-500/30',
           green: 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-green-500/30',
           blue: 'bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 shadow-blue-500/30',
           pink: 'bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 shadow-pink-500/30',
+
+          // 🔥 NEW COLOR
+          yellow: 'bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 shadow-yellow-500/30',
         };
 
         return (

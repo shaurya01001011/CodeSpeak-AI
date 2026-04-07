@@ -9,6 +9,7 @@ import { ErrorPanel } from './components/ErrorPanel';
 import { LanguageSelector } from './components/LanguageSelector';
 
 export default function App() {
+
   const [activeTab, setActiveTab] = useState('home');
   const [isListening, setIsListening] = useState(false);
   const [voiceFeedback, setVoiceFeedback] = useState(true);
@@ -18,35 +19,24 @@ export default function App() {
   const [output, setOutput] = useState('');
   const [error, setError] = useState('');
 
-  // 🎤 REAL VOICE INPUT
+  // 🎤 VOICE INPUT
   const handleToggleListening = () => {
-    if (!('webkitSpeechRecognition' in window)) {
-      setError("❌ Use Google Chrome for voice input");
-      return;
+    setIsListening(!isListening);
+
+    if (!isListening) {
+      const recognition = new (window as any).webkitSpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.start();
+
+      recognition.onresult = (event: any) => {
+        const speech = event.results[0][0].transcript;
+        setTranscript(speech);
+      };
+
+      recognition.onerror = () => {
+        setError("Voice recognition failed");
+      };
     }
-
-    const recognition = new (window as any).webkitSpeechRecognition();
-
-    recognition.lang = 'en-US';
-    recognition.continuous = false;
-    recognition.interimResults = false;
-
-    setIsListening(true);
-    recognition.start();
-
-    recognition.onresult = (event: any) => {
-      const speechText = event.results[0][0].transcript;
-      setTranscript(speechText);
-    };
-
-    recognition.onerror = () => {
-      setError("❌ Voice recognition error");
-      setIsListening(false);
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
-    };
   };
 
   // 🧠 GENERATE CODE
@@ -57,21 +47,19 @@ export default function App() {
     try {
       const response = await fetch("http://localhost:9090/generate", {
         method: "POST",
-        headers: {
-          "Content-Type": "text/plain"
-        },
-        body: transcript || "hello world"
+        headers: { "Content-Type": "text/plain" },
+        body: transcript
       });
 
       const data = await response.text();
       setCode(data);
 
       if (voiceFeedback) {
-        setOutput("> Code generated successfully!\n> Ready to run.");
+        setOutput("Code generated successfully!");
       }
 
     } catch (err) {
-      setError("❌ Failed to connect to backend");
+      setError("Failed to generate code");
     }
   };
 
@@ -80,16 +68,14 @@ export default function App() {
     setError('');
 
     if (!code) {
-      setError('No code to execute.');
+      setError("No code to run");
       return;
     }
 
     try {
       const response = await fetch("http://localhost:9090/run", {
         method: "POST",
-        headers: {
-          "Content-Type": "text/plain"
-        },
+        headers: { "Content-Type": "text/plain" },
         body: code
       });
 
@@ -97,58 +83,87 @@ export default function App() {
       setOutput(data);
 
     } catch (err) {
-      setError("❌ Error running code");
+      setError("Execution failed");
     }
   };
 
-  // 🧠 EXPLAIN CODE + 🔊 SPEAK
+  // 📖 EXPLAIN CODE
   const handleExplain = async () => {
     setError('');
 
     if (!code) {
-      setError('No code to explain.');
+      setError("No code to explain");
       return;
     }
 
     try {
       const response = await fetch("http://localhost:9090/explain", {
         method: "POST",
-        headers: {
-          "Content-Type": "text/plain"
-        },
+        headers: { "Content-Type": "text/plain" },
         body: code
       });
 
-      const explanation = await response.text();
-      setOutput(explanation);
+      const data = await response.text();
+      setOutput(data);
 
-      // 🔊 SPEAK EXPLANATION
-      const speech = new SpeechSynthesisUtterance(explanation);
-      speech.lang = "en-US";
+      // 🔊 Speak explanation
+      const speech = new SpeechSynthesisUtterance(data);
       window.speechSynthesis.speak(speech);
 
     } catch (err) {
-      setError("❌ Failed to explain code");
+      setError("Explanation failed");
     }
   };
 
-  // 🔊 READ OUTPUT AGAIN
+  // 📚 LEARN CONCEPT (NEW 🔥)
+  const handleLearn = async () => {
+    setError('');
+
+    if (!transcript) {
+      setError('Please speak a concept first');
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:9090/learn", {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: transcript
+      });
+
+      const data = await response.text();
+      setOutput(data);
+
+      // 🔊 Speak explanation
+      const speech = new SpeechSynthesisUtterance(data);
+      window.speechSynthesis.speak(speech);
+
+    } catch (err) {
+      setError("Learning feature failed");
+    }
+  };
+
+  // 🔊 READ ALOUD
   const handleReadAloud = () => {
     if (!output) {
-      setError('Nothing to read');
+      setError("Nothing to read");
       return;
     }
 
     const speech = new SpeechSynthesisUtterance(output);
-    speech.lang = "en-US";
     window.speechSynthesis.speak(speech);
   };
 
   return (
     <div className="h-screen flex flex-col bg-[#0a0a0f] dark">
-      <Header voiceFeedback={voiceFeedback} onToggleVoice={() => setVoiceFeedback(!voiceFeedback)} />
+
+      <Header
+        voiceFeedback={voiceFeedback}
+        onToggleVoice={() => setVoiceFeedback(!voiceFeedback)}
+      />
 
       <div className="flex-1 flex overflow-hidden">
+
         <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
 
         <main className="flex-1 overflow-auto p-6">
@@ -156,18 +171,27 @@ export default function App() {
 
             {/* 🎤 Voice Input */}
             <div className="bg-[#131320] border border-purple-500/20 rounded-xl p-8 flex flex-col items-center">
-              <VoiceInput isListening={isListening} onToggleListening={handleToggleListening} />
+              <VoiceInput
+                isListening={isListening}
+                onToggleListening={handleToggleListening}
+              />
             </div>
 
-            {/* 📝 Transcript */}
+            {/* 📜 Speech Text */}
             {transcript && (
               <div className="bg-[#131320] border border-purple-500/20 rounded-xl p-6">
-                <label className="text-purple-400 mb-3 block">Your Speech Input</label>
+                <label className="text-purple-400 mb-3 block">
+                  Your Speech Input
+                </label>
                 <p className="text-gray-300 text-lg">{transcript}</p>
               </div>
             )}
 
-            <LanguageSelector selectedLanguage={selectedLanguage} onLanguageChange={setSelectedLanguage} />
+            {/* 🌐 Language */}
+            <LanguageSelector
+              selectedLanguage={selectedLanguage}
+              onLanguageChange={setSelectedLanguage}
+            />
 
             {/* 🔘 Buttons */}
             <ActionButtons
@@ -175,7 +199,7 @@ export default function App() {
               onRun={handleRun}
               onExplain={handleExplain}
               onReadAloud={handleReadAloud}
-              disabled={false}
+              onLearn={handleLearn}   // 🔥 NEW
             />
 
             {/* ❌ Errors */}
@@ -183,6 +207,7 @@ export default function App() {
 
             {/* 💻 Code + Output */}
             <div className="grid grid-cols-2 gap-6">
+
               <div className="bg-[#131320] border border-purple-500/20 rounded-xl overflow-hidden h-[400px]">
                 <CodeEditor code={code} />
               </div>
@@ -190,13 +215,14 @@ export default function App() {
               <div className="bg-[#131320] border border-purple-500/20 rounded-xl overflow-hidden h-[400px]">
                 <OutputPanel output={output} />
               </div>
+
             </div>
 
             {/* ℹ️ Info */}
             <div className="bg-gradient-to-r from-purple-500/10 to-indigo-500/10 border border-purple-500/30 rounded-xl p-6">
               <h3 className="text-purple-400 mb-2">Welcome to CodeSpeak AI</h3>
-              <p className="text-gray-400 text-sm">
-                Speak → Generate → Run → Explain → Listen 🔊
+              <p className="text-gray-400 text-sm leading-relaxed">
+                Speak your requirements to generate, run, explain code and now even learn programming concepts with voice assistance.
               </p>
             </div>
 
